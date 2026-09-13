@@ -22,6 +22,7 @@ import urllib.request
 PORT = int(os.environ.get("KEROTV_PORT", "8000"))
 ROOT = os.path.dirname(os.path.abspath(__file__))
 MEDIA_DIR = os.path.join(ROOT, "media")
+SUBTITLE_DIR = os.path.join(ROOT, "subtitles")
 MEDIA_FILE = os.path.join(MEDIA_DIR, "kerotv-test.mp4")
 MEDIA_URL = "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4"
 MEDIA_TYPES = {
@@ -82,12 +83,16 @@ class NoCacheHandler(http.server.SimpleHTTPRequestHandler):
     def do_HEAD(self):
         if self._is_media_request():
             self._serve_media(False)
+        elif self._is_subtitle_request():
+            self._serve_subtitle(False)
         else:
             super().do_HEAD()
 
     def do_GET(self):
         if self._is_media_request():
             self._serve_media(True)
+        elif self._is_subtitle_request():
+            self._serve_subtitle(True)
         else:
             super().do_GET()
 
@@ -108,6 +113,52 @@ class NoCacheHandler(http.server.SimpleHTTPRequestHandler):
 
     def _is_media_request(self):
         return self._media_path() is not None
+
+    def _subtitle_path(self):
+        request_path = self.path.split("?", 1)[0]
+        if not request_path.startswith("/subtitles/"):
+            return None
+
+        filename = request_path[len("/subtitles/"):]
+        if not filename or "/" in filename or "\\" in filename or filename in (".", ".."):
+            return None
+
+        extension = os.path.splitext(filename)[1].lower()
+        if extension not in (".srt", ".vtt"):
+            return None
+
+        return os.path.join(SUBTITLE_DIR, filename)
+
+    def _is_subtitle_request(self):
+        return self._subtitle_path() is not None
+
+    def _decode_subtitle(self, raw):
+        for encoding in ("utf-8-sig", "cp1254", "cp1252"):
+            try:
+                return raw.decode(encoding)
+            except UnicodeDecodeError:
+                pass
+        return raw.decode("latin-1", errors="replace")
+
+    def _serve_subtitle(self, send_body):
+        subtitle_path = self._subtitle_path()
+        if not subtitle_path or not os.path.exists(subtitle_path):
+            self.send_error(404, "KeroTV subtitle file not found")
+            return
+
+        with open(subtitle_path, "rb") as source:
+            raw = source.read()
+
+        normalized = self._decode_subtitle(raw).replace("\r\n", "\n").replace("\r", "\n")
+        payload = normalized.encode("utf-8")
+
+        self.send_response(200)
+        self.send_header("Content-Type", "text/plain; charset=utf-8")
+        self.send_header("Content-Length", str(len(payload)))
+        self.end_headers()
+
+        if send_body:
+            self.wfile.write(payload)
 
     def _serve_media(self, send_body):
         media_path = self._media_path()
@@ -201,8 +252,12 @@ if __name__ == "__main__":
     print("LAN H.264 probe: {0}".format("READY" if media_ready else "NOT READY"))
     deadcells_av1 = os.path.join(MEDIA_DIR, "deadcells-av1.mp4")
     deadcells_h264 = os.path.join(MEDIA_DIR, "deadcells-h264.mp4")
+    age_ultron_h264 = os.path.join(MEDIA_DIR, "age-of-ultron-h264.mp4")
+    age_ultron_srt = os.path.join(SUBTITLE_DIR, "age-of-ultron.srt")
     print("Dead Cells AV1 test: {0}".format("READY" if os.path.exists(deadcells_av1) else "MISSING"))
     print("Dead Cells H.264 control: {0}".format("READY" if os.path.exists(deadcells_h264) else "MISSING"))
+    print("Age of Ultron H.264: {0}".format("READY" if os.path.exists(age_ultron_h264) else "MISSING"))
+    print("Age of Ultron SRT: {0}".format("READY" if os.path.exists(age_ultron_srt) else "MISSING"))
     print("")
     print("Keep this window open while testing on the TV.")
     print("Press Ctrl+C to stop.")
