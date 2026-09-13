@@ -2,7 +2,7 @@
   "use strict";
 
   var state = {
-    version: "0.0.1",
+    version: "0.0.2",
     startedAt: new Date().toISOString ? new Date().toISOString() : String(new Date()),
     device: {},
     features: {},
@@ -20,6 +20,16 @@
   var panelOpen = false;
   var remotePanelActive = false;
   var tiles = [];
+  var pointerBridge = {
+    lastX: null,
+    lastY: null,
+    lastNavAt: 0,
+    seenMoves: 0,
+    enabled: false
+  };
+  var backGuardMode = "none";
+  var backGuardArmed = false;
+  var exitWindowUntil = 0;
   var VIDEO_URL = "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4";
 
   function on(el, eventName, handler) {
@@ -248,10 +258,10 @@
   }
 
   function remotePanelHtml() {
-    return '<p>Press buttons on the Sony remote. KeroTV records the JavaScript key name, keyCode and timestamp. Unknown codes are valuable.</p>' +
+    return '<p>Press buttons on the Sony remote. KeroTV records both real key events and Sony browser pointer-emulation events. Unknown input is valuable.</p>' +
       '<div id="remoteKeyDisplay" class="key-display">Waiting for remote input…</div>' +
-      '<div class="small">Try: ↑ ↓ ← → · OK · Back/Return · Play · Pause · Stop · Red · Green · Yellow · Blue.</div>' +
-      '<div id="remoteKeyLog" class="key-log">No keys recorded yet.</div>';
+      '<div class="small">Try: ↑ ↓ ← → · OK · Back/Return · number keys · Play · Pause · Stop · Red · Green · Yellow · Blue.</div>' +
+      '<div id="remoteKeyLog" class="key-log">No input recorded yet.</div>';
   }
 
   function openRemoteTest() {
@@ -302,6 +312,201 @@
 
     if (remotePanelActive) {
       renderKeyLog();
+    }
+  }
+
+
+  function recordSyntheticInput(name, code) {
+    var item = {
+      code: code,
+      key: "",
+      name: name,
+      time: new Date().toLocaleTimeString ? new Date().toLocaleTimeString() : String(new Date())
+    };
+
+    state.keys.push(item);
+    if (state.keys.length > 24) {
+      state.keys.shift();
+    }
+
+    setText(byId("lastKey"), "Last input: " + name);
+
+    if (remotePanelActive) {
+      renderKeyLog();
+    }
+  }
+
+  function activatePointerBridge() {
+    if (!pointerBridge.enabled) {
+      pointerBridge.enabled = true;
+      addClass(document.body, "remote-pointer-mode");
+      setText(byId("remoteState"), "POINTER");
+      setText(byId("bootMessage"), "Sony remote pointer mode detected. KeroTV is translating pointer motion into D-pad navigation.");
+    }
+  }
+
+  function handlePointerMove(event) {
+    var x = typeof event.clientX === "number" ? event.clientX : event.screenX;
+    var y = typeof event.clientY === "number" ? event.clientY : event.screenY;
+    var dx;
+    var dy;
+    var absX;
+    var absY;
+    var direction;
+    var now;
+
+    if (typeof x !== "number" || typeof y !== "number") {
+      return;
+    }
+
+    if (pointerBridge.lastX === null || pointerBridge.lastY === null) {
+      pointerBridge.lastX = x;
+      pointerBridge.lastY = y;
+      return;
+    }
+
+    dx = x - pointerBridge.lastX;
+    dy = y - pointerBridge.lastY;
+    pointerBridge.lastX = x;
+    pointerBridge.lastY = y;
+
+    absX = Math.abs(dx);
+    absY = Math.abs(dy);
+
+    if (absX < 3 && absY < 3) {
+      return;
+    }
+
+    now = new Date().getTime();
+    if (now - pointerBridge.lastNavAt < 140) {
+      return;
+    }
+
+    direction = absX >= absY ? (dx < 0 ? "Left" : "Right") : (dy < 0 ? "Up" : "Down");
+    pointerBridge.seenMoves += 1;
+
+    if (pointerBridge.seenMoves >= 2) {
+      activatePointerBridge();
+    }
+
+    if (!pointerBridge.enabled) {
+      return;
+    }
+
+    pointerBridge.lastNavAt = now;
+
+    if (remotePanelActive) {
+      recordSyntheticInput("Remote pointer " + direction, "pointer-" + direction.toLowerCase());
+      return;
+    }
+
+    if (panelOpen) {
+      return;
+    }
+
+    if (direction === "Left") {
+      moveFocus(-1);
+    } else if (direction === "Right") {
+      moveFocus(1);
+    } else if (direction === "Up") {
+      moveFocus(-3);
+    } else if (direction === "Down") {
+      moveFocus(3);
+    }
+
+    recordSyntheticInput("Remote " + direction, "pointer-" + direction.toLowerCase());
+  }
+
+  function handlePointerClick() {
+    if (remotePanelActive) {
+      recordSyntheticInput("Remote OK / pointer click", "pointer-click");
+    }
+  }
+
+  function pushHistoryGuard() {
+    try {
+      window.history.pushState({ kerotvGuard: true }, document.title, window.location.href);
+      backGuardArmed = true;
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  function armBackGuard() {
+    try {
+      if (window.history && window.history.pushState && window.history.replaceState) {
+        window.history.replaceState({ kerotvBase: true }, document.title, window.location.href);
+        if (pushHistoryGuard()) {
+          backGuardMode = "history";
+          return;
+        }
+      }
+    } catch (historyError) {}
+
+    try {
+      backGuardMode = "hash";
+      backGuardArmed = true;
+      if (window.location.hash !== "#kerotv") {
+        window.location.hash = "kerotv";
+      }
+    } catch (hashError) {
+      backGuardMode = "none";
+      backGuardArmed = false;
+    }
+  }
+
+  function showExitHint() {
+    setText(byId("bootMessage"), "Back captured by KeroTV. Press Back again quickly to leave the app.");
+  }
+
+  function handleGuardedBack() {
+    var now = new Date().getTime();
+
+    if (!backGuardArmed) {
+      return;
+    }
+
+    if (panelOpen) {
+      closePanel();
+      exitWindowUntil = 0;
+
+      if (backGuardMode === "history") {
+        pushHistoryGuard();
+      } else if (backGuardMode === "hash" && window.location.hash !== "#kerotv") {
+        window.location.hash = "kerotv";
+      }
+      return;
+    }
+
+    if (now < exitWindowUntil) {
+      backGuardArmed = false;
+      exitWindowUntil = 0;
+      try {
+        window.history.back();
+      } catch (ignore) {}
+      return;
+    }
+
+    exitWindowUntil = now + 1600;
+    showExitHint();
+
+    if (backGuardMode === "history") {
+      pushHistoryGuard();
+    } else if (backGuardMode === "hash" && window.location.hash !== "#kerotv") {
+      window.location.hash = "kerotv";
+    }
+  }
+
+  function handlePopState() {
+    if (backGuardMode === "history") {
+      handleGuardedBack();
+    }
+  }
+
+  function handleHashChange() {
+    if (backGuardMode === "hash" && window.location.hash !== "#kerotv") {
+      handleGuardedBack();
     }
   }
 
@@ -650,7 +855,11 @@
         });
 
         on(button, "click", function () {
-          invokeAction(button.getAttribute("data-action"));
+          if (pointerBridge.enabled && !panelOpen) {
+            invokeAction(tiles[tileIndex].getAttribute("data-action"));
+          } else {
+            invokeAction(button.getAttribute("data-action"));
+          }
         });
       }(buttons[i], i));
     }
@@ -661,9 +870,14 @@
   function init() {
     initTiles();
     on(document, "keydown", handleKeyDown);
+    on(document, "mousemove", handlePointerMove);
+    on(document, "click", handlePointerClick);
+    on(window, "popstate", handlePopState);
+    on(window, "hashchange", handleHashChange);
     updateClock();
     window.setInterval(updateClock, 30000);
     runCompatibilityScan();
+    armBackGuard();
   }
 
   if (document.readyState === "loading") {
