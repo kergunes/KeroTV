@@ -24,6 +24,12 @@ ROOT = os.path.dirname(os.path.abspath(__file__))
 MEDIA_DIR = os.path.join(ROOT, "media")
 MEDIA_FILE = os.path.join(MEDIA_DIR, "kerotv-test.mp4")
 MEDIA_URL = "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4"
+MEDIA_TYPES = {
+    ".mp4": "video/mp4",
+    ".m4v": "video/mp4",
+    ".webm": "video/webm",
+    ".mkv": "video/x-matroska",
+}
 
 
 def ensure_test_media():
@@ -85,15 +91,33 @@ class NoCacheHandler(http.server.SimpleHTTPRequestHandler):
         else:
             super().do_GET()
 
+    def _media_path(self):
+        request_path = self.path.split("?", 1)[0]
+        if not request_path.startswith("/media/"):
+            return None
+
+        filename = request_path[len("/media/"):]
+        if not filename or "/" in filename or "\\" in filename or filename in (".", ".."):
+            return None
+
+        extension = os.path.splitext(filename)[1].lower()
+        if extension not in MEDIA_TYPES:
+            return None
+
+        return os.path.join(MEDIA_DIR, filename)
+
     def _is_media_request(self):
-        return self.path.split("?", 1)[0] == "/media/kerotv-test.mp4"
+        return self._media_path() is not None
 
     def _serve_media(self, send_body):
-        if not os.path.exists(MEDIA_FILE):
-            self.send_error(404, "KeroTV test media is not cached on the PC")
+        media_path = self._media_path()
+        if not media_path or not os.path.exists(media_path):
+            self.send_error(404, "KeroTV media file not found")
             return
 
-        size = os.path.getsize(MEDIA_FILE)
+        extension = os.path.splitext(media_path)[1].lower()
+        content_type = MEDIA_TYPES.get(extension, "application/octet-stream")
+        size = os.path.getsize(media_path)
         start = 0
         end = size - 1
         partial = False
@@ -122,7 +146,7 @@ class NoCacheHandler(http.server.SimpleHTTPRequestHandler):
 
         length = end - start + 1
         self.send_response(206 if partial else 200)
-        self.send_header("Content-Type", "video/mp4")
+        self.send_header("Content-Type", content_type)
         self.send_header("Content-Length", str(length))
         self.send_header("Accept-Ranges", "bytes")
         if partial:
@@ -135,7 +159,7 @@ class NoCacheHandler(http.server.SimpleHTTPRequestHandler):
         if not send_body:
             return
 
-        with open(MEDIA_FILE, "rb") as source:
+        with open(media_path, "rb") as source:
             source.seek(start)
             remaining = length
             while remaining > 0:
@@ -175,6 +199,10 @@ if __name__ == "__main__":
     print("PC: http://127.0.0.1:{0}".format(PORT))
     print("TV: http://{0}:{1}".format(ip, PORT))
     print("LAN H.264 probe: {0}".format("READY" if media_ready else "NOT READY"))
+    deadcells_av1 = os.path.join(MEDIA_DIR, "deadcells-av1.mp4")
+    deadcells_h264 = os.path.join(MEDIA_DIR, "deadcells-h264.mp4")
+    print("Dead Cells AV1 test: {0}".format("READY" if os.path.exists(deadcells_av1) else "MISSING"))
+    print("Dead Cells H.264 control: {0}".format("READY" if os.path.exists(deadcells_h264) else "MISSING"))
     print("")
     print("Keep this window open while testing on the TV.")
     print("Press Ctrl+C to stop.")
