@@ -2,7 +2,7 @@
   "use strict";
 
   var state = {
-    version: "0.0.2",
+    version: "0.0.3",
     startedAt: new Date().toISOString ? new Date().toISOString() : String(new Date()),
     device: {},
     features: {},
@@ -417,10 +417,36 @@
     recordSyntheticInput("Remote " + direction, "pointer-" + direction.toLowerCase());
   }
 
-  function handlePointerClick() {
+  function handlePointerClick(event) {
+    if (!pointerBridge.enabled) {
+      return true;
+    }
+
     if (remotePanelActive) {
       recordSyntheticInput("Remote OK / pointer click", "pointer-click");
+      return true;
     }
+
+    if (panelOpen) {
+      return true;
+    }
+
+    if (event) {
+      if (event.preventDefault) {
+        event.preventDefault();
+      }
+      if (event.stopPropagation) {
+        event.stopPropagation();
+      }
+      event.cancelBubble = true;
+      event.returnValue = false;
+    }
+
+    recordSyntheticInput("Remote OK / focused tile", "pointer-click");
+    if (tiles[tileIndex]) {
+      invokeAction(tiles[tileIndex].getAttribute("data-action"));
+    }
+    return false;
   }
 
   function pushHistoryGuard() {
@@ -854,12 +880,20 @@
           addClass(button, "is-focused");
         });
 
-        on(button, "click", function () {
+        on(button, "click", function (event) {
           if (pointerBridge.enabled && !panelOpen) {
-            invokeAction(tiles[tileIndex].getAttribute("data-action"));
-          } else {
-            invokeAction(button.getAttribute("data-action"));
+            if (event) {
+              if (event.preventDefault) {
+                event.preventDefault();
+              }
+              event.cancelBubble = true;
+              event.returnValue = false;
+            }
+            return false;
           }
+
+          invokeAction(button.getAttribute("data-action"));
+          return true;
         });
       }(buttons[i], i));
     }
@@ -878,6 +912,14 @@
     window.setInterval(updateClock, 30000);
     runCompatibilityScan();
     armBackGuard();
+
+    if (document.addEventListener) {
+      document.addEventListener("mouseup", function (event) {
+        if (pointerBridge.enabled && !panelOpen) {
+          handlePointerClick(event);
+        }
+      }, true);
+    }
   }
 
   if (document.readyState === "loading") {
