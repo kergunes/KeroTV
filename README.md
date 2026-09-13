@@ -106,3 +106,17 @@ Two Subtitle Lab entries are exposed on Home:
   - `subtitles/age-of-ultron.srt`
 
 The Age of Ultron files stay local and are not committed to GitHub.
+
+## Remote-first custom media player
+
+KeroTV no longer depends on the browser's native video controls for the main playback UX. Video decoding remains native, but transport, subtitles, fullscreen and remote interaction are owned by KeroTV.
+
+Player controls:
+- Left / Right: seek -10 / +10 seconds
+- OK: play/pause or activate the highlighted control
+- Up / Down: move across the custom control strip
+- Subtitle - / +: adjust subtitle size from 30px to 80px; the preference is stored locally
+- Back: leave playback
+- Fullscreen: KeroTV fullscreen keeps subtitle and custom controls in the same layer
+
+On Sony pointer-style remotes, KeroTV attempts Pointer Lock in fullscreen. If the browser supports it, directional input keeps producing relative motion even when the hidden pointer would otherwise hit a screen edge.
