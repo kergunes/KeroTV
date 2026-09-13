@@ -86,3 +86,23 @@ For the Dead Cells AV1 vs H.264 test, use these exact filenames:
 The Home screen exposes both under **Codec Lab**. Missing files simply produce a player error until copied into place.
 
 `server.py` serves supported local media files with HTTP byte-range support, so seeking/streaming uses the same path as the verified KeroTV MP4 test.
+
+## KeroTV subtitle overlay
+
+KeroTV now has its own ES5-compatible SRT renderer. Subtitles are **not** embedded into the MP4 and are not delegated to the Sony DLNA player.
+
+The playback path is:
+
+`H.264 MP4 -> browser video element`  
+`SRT -> KeroTV server -> UTF-8 normalization -> JavaScript cue parser -> on-screen overlay`
+
+The server accepts UTF-8 SRT and also falls back to Windows Turkish `CP1254` (plus CP1252) before serving subtitle text as UTF-8.
+
+Two Subtitle Lab entries are exposed on Home:
+
+- **H.264 + SRT Proof** uses the already verified `media/kerotv-test.mp4` plus `subtitles/kerotv-h264-proof.srt`.
+- **Age of Ultron · H.264 + SRT** expects:
+  - `media/age-of-ultron-h264.mp4`
+  - `subtitles/age-of-ultron.srt`
+
+The Age of Ultron files stay local and are not committed to GitHub.
