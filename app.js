@@ -2,7 +2,7 @@
   "use strict";
 
   var state = {
-    version: "0.0.3",
+    version: "0.0.4",
     startedAt: new Date().toISOString ? new Date().toISOString() : String(new Date()),
     device: {},
     features: {},
@@ -30,7 +30,8 @@
   var backGuardMode = "none";
   var backGuardArmed = false;
   var exitWindowUntil = 0;
-  var VIDEO_URL = "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4";
+  var VIDEO_URL_LOCAL = "media/kerotv-test.mp4";
+  var VIDEO_URL_DIRECT = "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4";
 
   function on(el, eventName, handler) {
     if (!el) {
@@ -640,26 +641,38 @@
   }
 
   function videoPanelHtml() {
-    return '<p>This test loads a small public H.264/MP4 sample over HTTPS. Codec support and successful network playback are recorded separately.</p>' +
+    return '<p>Test codec support separately from old-TV HTTPS/TLS support. Start with LAN HTTP; it is the decisive decoder test.</p>' +
       makeRow("Browser H.264 claim", state.codecs.h264Mp4 || false, 'video.canPlayType("video/mp4; codecs=avc1…")') +
-      '<button id="videoStartBtn" class="action-button">Start MP4 test</button>' +
+      '<button id="videoLocalBtn" class="action-button">1 · Test LAN H.264</button>' +
+      '<button id="videoDirectBtn" class="action-button">2 · Test direct HTTPS</button>' +
       '<div id="videoStatus" class="key-display">Not started</div>' +
       '<div class="video-wrap"><video id="probeVideo" preload="none"></video></div>' +
-      '<p class="small">Source: Google GTV public sample. If codec support says YES but loading fails, the problem may be TLS/network rather than decoding.</p>';
+      '<p class="small">LAN test: PC downloads the MDN sample once and serves it over the same local HTTP server. Direct test uses the same file over HTTPS. If LAN passes and HTTPS fails, the decoder is fine and the limitation is network/TLS.</p>';
   }
 
   function openVideoTest() {
     openPanel("Video", "REAL PLAYBACK TEST", videoPanelHtml());
-    var button = byId("videoStartBtn");
-    if (button) {
-      on(button, "click", startVideoTest);
+
+    var localButton = byId("videoLocalBtn");
+    var directButton = byId("videoDirectBtn");
+
+    if (localButton) {
+      on(localButton, "click", function () {
+        startVideoTest(VIDEO_URL_LOCAL, "LAN HTTP");
+      });
       try {
-        button.focus();
+        localButton.focus();
       } catch (ignore) {}
+    }
+
+    if (directButton) {
+      on(directButton, "click", function () {
+        startVideoTest(VIDEO_URL_DIRECT, "Direct HTTPS");
+      });
     }
   }
 
-  function startVideoTest() {
+  function startVideoTest(url, label) {
     var video = byId("probeVideo");
     var status = byId("videoStatus");
 
@@ -669,48 +682,55 @@
 
     state.tests.video = "RUNNING";
     setText(byId("videoState"), "TESTING");
-    setText(status, "Loading MP4…");
+    removeClass(status, "pass");
+    removeClass(status, "fail");
+    setText(status, label + " · loading MP4…");
+
+    video.removeAttribute("src");
+    try {
+      video.load();
+    } catch (resetError) {}
 
     on(video, "loadedmetadata", function () {
-      setText(status, "Metadata loaded · " + video.videoWidth + "x" + video.videoHeight);
+      setText(status, label + " · metadata " + video.videoWidth + "x" + video.videoHeight);
     });
 
     on(video, "canplay", function () {
-      setText(status, "Can play · starting…");
+      setText(status, label + " · can play · starting…");
       try {
         var result = video.play();
         if (result && typeof result.catch === "function") {
           result.catch(function () {
-            setText(status, "Loaded, but play() was blocked. Press OK again.");
+            setText(status, label + " · loaded, but play() was blocked. Press OK again.");
           });
         }
       } catch (error) {
-        setText(status, "Loaded. play() threw: " + (error.message || String(error)));
+        setText(status, label + " · loaded; play() threw: " + (error.message || String(error)));
       }
     });
 
     on(video, "playing", function () {
-      state.tests.video = "PASS";
+      state.tests.video = "PASS (" + label + ")";
       setText(byId("videoState"), "PASS");
-      setText(status, "PASS · video is playing");
+      setText(status, "PASS · " + label + " · video is playing");
       addClass(status, "pass");
     });
 
     on(video, "error", function () {
       var code = video.error ? video.error.code : "unknown";
-      state.tests.video = "FAIL";
+      state.tests.video = "FAIL (" + label + ", code " + code + ")";
       setText(byId("videoState"), "FAIL");
-      setText(status, "FAIL · media error code " + code);
+      setText(status, "FAIL · " + label + " · media error code " + code);
       addClass(status, "fail");
     });
 
-    video.src = VIDEO_URL;
+    video.src = url;
     try {
       video.load();
     } catch (error2) {
-      state.tests.video = "FAIL";
+      state.tests.video = "FAIL (" + label + ")";
       setText(byId("videoState"), "FAIL");
-      setText(status, "FAIL · " + (error2.message || String(error2)));
+      setText(status, "FAIL · " + label + " · " + (error2.message || String(error2)));
       addClass(status, "fail");
     }
   }
