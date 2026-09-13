@@ -17,6 +17,7 @@ import os
 import socket
 import socketserver
 import urllib.request
+import unicodedata
 
 
 PORT = int(os.environ.get("KEROTV_PORT", "8000"))
@@ -132,13 +133,49 @@ class NoCacheHandler(http.server.SimpleHTTPRequestHandler):
     def _is_subtitle_request(self):
         return self._subtitle_path() is not None
 
-    def _decode_subtitle(self, raw):
-        for encoding in ("utf-8-sig", "cp1254", "iso-8859-9", "cp1252"):
+    def _text_quality_score(self, text):
+        bad_markers = ("Ã", "Ä", "Å", "Â", "�", "Ð", "Þ", "Ý")
+        turkish = "çğıİöşüÇĞÖŞÜ"
+        score = 0
+        for marker in bad_markers:
+            score -= text.count(marker) * 12
+        for char in turkish:
+            score += text.count(char) * 2
+        score -= text.count("\x00") * 20
+        return score
+
+    def _repair_utf8_mojibake(self, text):
+        candidates = [text]
+        for encoding in ("cp1252", "cp1254", "latin-1"):
             try:
-                return raw.decode(encoding)
+                repaired = text.encode(encoding).decode("utf-8")
+                candidates.append(repaired)
+            except (UnicodeEncodeError, UnicodeDecodeError):
+                pass
+        return max(candidates, key=self._text_quality_score)
+
+    def _decode_subtitle(self, raw):
+        candidates = []
+
+        if raw.startswith(b"\xff\xfe") or raw.startswith(b"\xfe\xff"):
+            try:
+                candidates.append(raw.decode("utf-16"))
             except UnicodeDecodeError:
                 pass
-        return raw.decode("latin-1", errors="replace")
+
+        for encoding in ("utf-8-sig", "cp1254", "iso-8859-9", "cp1252", "latin-1"):
+            try:
+                decoded = raw.decode(encoding)
+                candidates.append(decoded)
+            except UnicodeDecodeError:
+                pass
+
+        if not candidates:
+            return raw.decode("utf-8", errors="replace")
+
+        decoded = max(candidates, key=self._text_quality_score)
+        decoded = self._repair_utf8_mojibake(decoded)
+        return unicodedata.normalize("NFC", decoded)
 
     def _serve_subtitle(self, send_body):
         subtitle_path = self._subtitle_path()
