@@ -13,6 +13,7 @@ decoder can be tested independently from its old HTTPS/TLS stack.
 """
 
 import http.server
+import json
 import os
 import socket
 import socketserver
@@ -175,6 +176,7 @@ class NoCacheHandler(http.server.SimpleHTTPRequestHandler):
 
         decoded = max(candidates, key=self._text_quality_score)
         decoded = self._repair_utf8_mojibake(decoded)
+        decoded = unicodedata.normalize("NFKC", decoded)
         return unicodedata.normalize("NFC", decoded)
 
     def _serve_subtitle(self, send_body):
@@ -187,10 +189,20 @@ class NoCacheHandler(http.server.SimpleHTTPRequestHandler):
             raw = source.read()
 
         normalized = self._decode_subtitle(raw).replace("\r\n", "\n").replace("\r", "\n")
-        payload = normalized.encode("utf-8")
+        wants_json = "format=json" in self.path.split("?", 1)[-1]
+
+        if wants_json:
+            # ensure_ascii keeps the wire payload 7-bit ASCII. This avoids charset
+            # bugs in older VEWD/Opera XHR implementations while JSON.parse restores
+            # the exact Unicode Turkish characters in JavaScript.
+            payload = json.dumps(normalized, ensure_ascii=True).encode("ascii")
+            content_type = "application/json; charset=us-ascii"
+        else:
+            payload = normalized.encode("utf-8")
+            content_type = "text/plain; charset=utf-8"
 
         self.send_response(200)
-        self.send_header("Content-Type", "text/plain; charset=utf-8")
+        self.send_header("Content-Type", content_type)
         self.send_header("X-Content-Type-Options", "nosniff")
         self.send_header("Content-Length", str(len(payload)))
         self.end_headers()
