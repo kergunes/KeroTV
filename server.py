@@ -115,12 +115,15 @@ class NoCacheHandler(http.server.SimpleHTTPRequestHandler):
         return self.path.split("?", 1)[0] == "/assets/blank-cursor.gif"
 
     def _serve_cursor(self, send_body):
-        # 1x1 transparent GIF89a. Old Opera/VEWD builds that ignore
-        # cursor:none may still honor a custom cursor URL.
-        payload = bytes.fromhex(
-            "47494638396101000100800000000000ffffff"
-            "21f90401000000002c00000000010001000002024401003b"
-        )
+        # Deliberately visible 32x32 red GIF for the physical Sony cursor test.
+        # If the on-screen pointer turns into this red square, CSS custom cursors work.
+        payload = bytes([
+            71,73,70,56,55,97,32,0,32,0,129,0,0,255,0,0,0,0,0,0,0,0,0,0,0,
+            44,0,0,0,0,32,0,32,0,64,8,53,0,1,8,28,72,176,160,193,131,8,19,42,
+            92,200,176,161,195,135,16,35,74,156,72,177,162,197,139,24,51,106,
+            220,200,177,163,199,143,32,67,138,28,73,178,164,201,147,40,83,170,
+            92,201,82,100,64,0,59
+        ])
         self.send_response(200)
         self.send_header("Content-Type", "image/gif")
         self.send_header("Content-Length", str(len(payload)))
