@@ -1,3 +1,10 @@
+@font-face {
+  font-family: "KeroTV Arial";
+  src: url("/fonts/kerotv-arial.ttf") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+}
+
 html, body { margin: 0; padding: 0; min-height: 100%; background: #0c1013; color: #f8f0e5; font-family: Arial, Helvetica, sans-serif; }
 body { overflow-x: hidden; }
 button { font: inherit; }
@@ -47,7 +54,7 @@ h3 { margin: 0; font-size: 22px; }
 .player { min-height: 620px; background: #050708; position: relative; }
 .video-stage { position: relative; width: 100%; height: 520px; background: #000; overflow: hidden; }
 .player video { display: block; width: 100%; height: 520px; background: #000; }
-.subtitle-overlay { position: absolute; left: 4%; right: 4%; bottom: 7%; z-index: 20; color: #fff; background: transparent; font-family: "DejaVu Sans", "Liberation Sans", "Nimbus Sans L", Arial, sans-serif; font-size: 50px; line-height: 1.18; font-weight: normal; font-style: normal; font-variant: normal; letter-spacing: 0; text-transform: none; text-align: center; white-space: pre-line; -webkit-font-smoothing: antialiased; text-shadow: -2px 0 0 #000, 2px 0 0 #000, 0 -2px 0 #000, 0 2px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000, 2px 3px 4px #000; pointer-events: none; }
+.subtitle-overlay { position: absolute; left: 4%; right: 4%; bottom: 7%; z-index: 20; color: #fff; background: transparent; font-family: "KeroTV Arial", Arial, sans-serif; font-size: 50px; line-height: 1.18; font-weight: normal; font-style: normal; font-variant: normal; letter-spacing: 0; text-transform: none; text-align: center; white-space: pre-line; -webkit-font-smoothing: antialiased; text-shadow: -2px 0 0 #000, 2px 0 0 #000, 0 -2px 0 #000, 0 2px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000, 2px 3px 4px #000; pointer-events: none; }
 .subtitle-status { color: #c7d1cc; font-size: 14px; }
 .player-fullscreen { position: absolute; right: 170px; top: 17px; }
 .kerotv-fullscreen { overflow: hidden !important; }
@@ -69,3 +76,7 @@ h3 { margin: 0; font-size: 22px; }
 .remote-pointer-mode, .remote-pointer-mode * { cursor: none !important; }
 @media (max-width: 900px) { .app { width: 92%; } h1 { font-size: 42px; } .card { width: 46%; margin-bottom: 14px; } .hero-copy, .detail-content { width: 100%; } .detail-art { display: none; } }
 @media (max-width: 600px) { .screen { min-height: 500px; } .topbar-right #screenLabel { display: none; } .hero { padding: 25px; } h1 { font-size: 35px; } .card { width: 94%; } }
+
+.subtitle-overlay, .subtitle-overlay * {
+  font-family: "KeroTV Arial", Arial, sans-serif !important;
+}
