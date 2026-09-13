@@ -880,16 +880,9 @@
           addClass(button, "is-focused");
         });
 
-        on(button, "click", function (event) {
-          if (pointerBridge.enabled && !panelOpen) {
-            if (event) {
-              if (event.preventDefault) {
-                event.preventDefault();
-              }
-              event.cancelBubble = true;
-              event.returnValue = false;
-            }
-            return false;
+        on(button, "click", function () {
+          if (pointerBridge.enabled) {
+            return true;
           }
 
           invokeAction(button.getAttribute("data-action"));
@@ -913,13 +906,6 @@
     runCompatibilityScan();
     armBackGuard();
 
-    if (document.addEventListener) {
-      document.addEventListener("mouseup", function (event) {
-        if (pointerBridge.enabled && !panelOpen) {
-          handlePointerClick(event);
-        }
-      }, true);
-    }
   }
 
   if (document.readyState === "loading") {
