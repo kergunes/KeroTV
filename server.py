@@ -133,7 +133,7 @@ class NoCacheHandler(http.server.SimpleHTTPRequestHandler):
         return self._subtitle_path() is not None
 
     def _decode_subtitle(self, raw):
-        for encoding in ("utf-8-sig", "cp1254", "cp1252"):
+        for encoding in ("utf-8-sig", "cp1254", "iso-8859-9", "cp1252"):
             try:
                 return raw.decode(encoding)
             except UnicodeDecodeError:
@@ -154,6 +154,7 @@ class NoCacheHandler(http.server.SimpleHTTPRequestHandler):
 
         self.send_response(200)
         self.send_header("Content-Type", "text/plain; charset=utf-8")
+        self.send_header("X-Content-Type-Options", "nosniff")
         self.send_header("Content-Length", str(len(payload)))
         self.end_headers()
 
