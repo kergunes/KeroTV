@@ -358,3 +358,17 @@ h2 {
     display: none;
   }
 }
+
+
+/* Sony non-Android browser compatibility:
+   when the remote exposes D-pad as a mouse pointer, KeroTV hides the cursor
+   and translates its motion into deterministic tile focus. */
+.remote-pointer-mode,
+.remote-pointer-mode * {
+  cursor: none !important;
+}
+
+/* Keep status UI away from TV overscan / browser safe-area edges. */
+.hero-badge {
+  right: 24px;
+}
