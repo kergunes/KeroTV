@@ -141,3 +141,12 @@ h3 { font-size: 24px; }
 .player-cursor-hidden * {
   cursor: none !important;
 }
+
+/* VEWD/old Opera fallback: use an external fully-transparent cursor image. */
+.player-active,
+.player-active .video-stage,
+.player-active .video-stage *,
+.player-cursor-hidden,
+.player-cursor-hidden * {
+  cursor: url("/assets/blank-cursor.svg") 0 0, none !important;
+}
