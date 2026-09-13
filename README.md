@@ -73,3 +73,16 @@ Do not add React, Vue, Next.js, transpilers or a large dependency chain until th
 
 Implemented and desktop-checkable: Home, deterministic focus, static content data, Detail, local MP4 Player, loading/error/playing status, internal Back stack, focus restoration, safe-area spacing, and the Sony pointer-emulation adapter. Physical TV playback and remote behavior still require `docs/V1_TEST_CHECKLIST.md`.
 
+
+## Local codec lab
+
+KeroTV can serve personal test clips from the local `media/` folder without committing them to GitHub.
+
+For the Dead Cells AV1 vs H.264 test, use these exact filenames:
+
+- `media/deadcells-av1.mp4` — original NVIDIA AV1 + AAC capture
+- `media/deadcells-h264.mp4` — optional H.264 + AAC control copy
+
+The Home screen exposes both under **Codec Lab**. Missing files simply produce a player error until copied into place.
+
+`server.py` serves supported local media files with HTTP byte-range support, so seeking/streaming uses the same path as the verified KeroTV MP4 test.
