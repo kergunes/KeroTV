@@ -120,3 +120,12 @@ Player controls:
 - Fullscreen: KeroTV fullscreen keeps subtitle and custom controls in the same layer
 
 On Sony pointer-style remotes, KeroTV attempts Pointer Lock in fullscreen. If the browser supports it, directional input keeps producing relative motion even when the hidden pointer would otherwise hit a screen edge.
+
+## Picture modes and graphics-plane diagnostics
+
+The player now has a persistent **Fit / Zoom** picture mode.
+
+- **Fit** preserves the whole frame. Cinemascope sources such as 1920x800 will have letterbox bars on a 16:9 TV.
+- **Zoom** fills the 16:9 screen without distortion, but crops the left and right sides of wider cinema content.
+
+The player also reports source video resolution, browser UI viewport, screen-reported resolution, and device pixel ratio. This is used to distinguish native video-plane quality from the Sony/Vewd browser graphics plane. The general UI has been retuned with larger text and thicker primitives for a 720p-class TV graphics plane.
