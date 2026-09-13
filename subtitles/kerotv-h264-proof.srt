@@ -13,3 +13,8 @@ Bu yazı Sony DLNA altyazısı değil.
 4
 00:00:11,500 --> 00:00:15,000
 SRT dosyasını KeroTV kendisi çiziyor.
+
+5
+00:00:15,500 --> 00:00:22,000
+İ I ı i · Ğ G ğ g · Ş S ş s · Ç C ç c
+İstanbul, Iğdır, çığ, görüş, şaşırtıcı, özgürlük.
