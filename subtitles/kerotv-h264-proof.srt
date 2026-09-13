@@ -1,0 +1,15 @@
+1
+00:00:00,500 --> 00:00:03,500
+KeroTV subtitle overlay çalışıyor.
+
+2
+00:00:04,000 --> 00:00:07,000
+Video H.264 olarak aynen oynuyor.
+
+3
+00:00:07,500 --> 00:00:11,000
+Bu yazı Sony DLNA altyazısı değil.
+
+4
+00:00:11,500 --> 00:00:15,000
+SRT dosyasını KeroTV kendisi çiziyor.
