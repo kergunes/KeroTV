@@ -5,7 +5,7 @@
   font-style: normal;
 }
 
-html, body { margin: 0; padding: 0; min-height: 100%; background: #0c1013; color: #f8f0e5; font-family: Arial, Helvetica, sans-serif; }
+html, body { margin: 0; padding: 0; min-height: 100%; background: #0c1013; color: #f8f0e5; font-family: "KeroTV Arial", Arial, sans-serif; }
 body { overflow-x: hidden; }
 button { font: inherit; }
 .app { width: 88%; max-width: 1500px; margin: 0 auto; padding: 34px 0 30px; }
@@ -107,3 +107,28 @@ h3 { margin: 0; font-size: 22px; }
 .kerotv-fullscreen .player video { width: 100vw; height: 100vh; object-fit: contain; }
 .kerotv-fullscreen .player-chrome { position: fixed; z-index: 10020; }
 .kerotv-fullscreen .seek-osd { position: fixed; z-index: 10030; }
+
+/* 720p graphics-plane tuning: larger, thicker TV-native UI primitives */
+.topbar { border-bottom-width: 2px; }
+.topbar-right { font-size: 17px; }
+#clock { font-size: 27px; }
+.eyebrow { font-size: 15px; }
+h3 { font-size: 24px; }
+.metadata { font-size: 17px; }
+.action, .card { border-width: 2px; }
+.action { font-size: 18px; padding: 15px 25px; }
+.section-heading { font-size: 25px; }
+.card-meta { font-size: 16px; }
+.footer { border-top-width: 2px; font-size: 15px; }
+.player-meta { font-size: 16px; }
+.player-time { font-size: 16px; }
+.player-title { font-size: 28px; }
+.player-progress { height: 10px; }
+.resolution-info { color: #8fb8c8; }
+.player video.picture-fit { object-fit: contain !important; }
+.player video.picture-zoom { object-fit: cover !important; }
+
+@media (max-height: 760px) {
+  .player-control { padding: 10px 14px; font-size: 16px; }
+  .player-chrome { padding-bottom: 20px; }
+}
