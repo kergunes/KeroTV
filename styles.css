@@ -148,5 +148,5 @@ h3 { font-size: 24px; }
 .player-active .video-stage *,
 .player-cursor-hidden,
 .player-cursor-hidden * {
-  cursor: url("/assets/blank-cursor.svg") 0 0, none !important;
+  cursor: url("/assets/blank-cursor.gif") 16 16, auto !important;
 }
