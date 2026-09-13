@@ -132,3 +132,12 @@ h3 { font-size: 24px; }
   .player-control { padding: 10px 14px; font-size: 16px; }
   .player-chrome { padding-bottom: 20px; }
 }
+
+/* Hide the pointer for the entire playback session. */
+.player-active,
+.player-active .video-stage,
+.player-active .video-stage *,
+.player-cursor-hidden,
+.player-cursor-hidden * {
+  cursor: none !important;
+}
