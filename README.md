@@ -17,6 +17,14 @@ V0 answers the questions that matter before building the real product:
 - What viewport, screen size and user agent does the TV expose?
 - Are there HbbTV / OIPF / Vewd / Opera platform hints?
 
+## V1 — First real vertical slice
+
+The default launch screen is now the real remote-first loop:
+
+**Home → content card → Detail → Play → Back**
+
+V1 uses a small static catalog and the verified local H.264/MP4 path. It intentionally has no framework, build step, CSS Grid dependency, native HLS dependency, account system, or backend. V0 findings remain documented in `docs/V0_TEST_PLAN.md` and `docs/KD55XF7077_CAPABILITY_BASELINE.md`.
+
 ## Run on the local network
 
 1. Clone the repository on a computer connected to the same network as the TV.
@@ -60,4 +68,8 @@ Do not add React, Vue, Next.js, transpilers or a large dependency chain until th
 - non-Android Sony Smart TV platform
 - built-in browser
 - remote-first / 10-foot UI
+
+## V1 status
+
+Implemented and desktop-checkable: Home, deterministic focus, static content data, Detail, local MP4 Player, loading/error/playing status, internal Back stack, focus restoration, safe-area spacing, and the Sony pointer-emulation adapter. Physical TV playback and remote behavior still require `docs/V1_TEST_CHECKLIST.md`.
 

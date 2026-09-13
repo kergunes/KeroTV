@@ -4,94 +4,22 @@
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>KeroTV V0</title>
+  <title>KeroTV</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <div id="app" class="app">
-    <div class="topbar">
-      <div>
-        <div class="brand">KeroTV</div>
-        <div class="subtitle">V0 · TV Capability Probe</div>
-      </div>
-      <div id="clock" class="clock">--:--</div>
-    </div>
-
-    <div class="hero">
-      <div class="hero-copy">
-        <div class="eyebrow">SONY KD-55XF7077</div>
-        <h1>Can this TV run KeroTV?</h1>
-        <p id="bootMessage">Booting conservative compatibility shell…</p>
-      </div>
-      <div class="hero-badge">
-        <span id="healthDot" class="health-dot"></span>
-        <span id="healthText">Scanning</span>
-      </div>
-    </div>
-
-    <div id="tiles" class="tiles" aria-label="KeroTV tests">
-      <button class="tile is-focused" data-action="scan" tabindex="0">
-        <span class="tile-number">01</span>
-        <span class="tile-title">Compatibility</span>
-        <span class="tile-copy">Browser, APIs, codecs and platform hints.</span>
-        <span id="scanState" class="tile-state">AUTO</span>
-      </button>
-
-      <button class="tile" data-action="remote" tabindex="-1">
-        <span class="tile-number">02</span>
-        <span class="tile-title">Remote input</span>
-        <span class="tile-copy">D-pad, OK, Back and media key logger.</span>
-        <span id="remoteState" class="tile-state">READY</span>
-      </button>
-
-      <button class="tile" data-action="storage" tabindex="-1">
-        <span class="tile-number">03</span>
-        <span class="tile-title">Storage</span>
-        <span class="tile-copy">localStorage and sessionStorage read/write.</span>
-        <span id="storageState" class="tile-state">READY</span>
-      </button>
-
-      <button class="tile" data-action="network" tabindex="-1">
-        <span class="tile-number">04</span>
-        <span class="tile-title">Network</span>
-        <span class="tile-copy">Same-origin XHR and online state.</span>
-        <span id="networkState" class="tile-state">READY</span>
-      </button>
-
-      <button class="tile" data-action="video" tabindex="-1">
-        <span class="tile-number">05</span>
-        <span class="tile-title">Video</span>
-        <span class="tile-copy">Real H.264/MP4 load and playback test.</span>
-        <span id="videoState" class="tile-state">READY</span>
-      </button>
-
-      <button class="tile" data-action="report" tabindex="-1">
-        <span class="tile-number">06</span>
-        <span class="tile-title">Report</span>
-        <span class="tile-copy">One screen with the current probe results.</span>
-        <span class="tile-state">OPEN</span>
-      </button>
-    </div>
-
-    <div class="footer">
-      <span>Navigate: ↑ ↓ ← →</span>
-      <span>Open: OK / Enter</span>
-      <span>Close panel: Back / Esc</span>
-      <span id="lastKey">Last key: —</span>
-    </div>
-  </div>
-
-  <div id="panel" class="panel" aria-hidden="true">
-    <div class="panel-card">
-      <div class="panel-header">
-        <div>
-          <div id="panelKicker" class="eyebrow">KEROTV V0</div>
-          <h2 id="panelTitle">Panel</h2>
-        </div>
-        <div class="panel-close-hint">Back / Esc to close</div>
-      </div>
-      <div id="panelBody" class="panel-body"></div>
-    </div>
+    <header class="topbar">
+      <div class="brand">Kero<span>TV</span></div>
+      <div class="topbar-right"><span id="screenLabel">HOME</span><span id="clock">--:--</span></div>
+    </header>
+    <main id="screen" class="screen" aria-live="polite"></main>
+    <footer class="footer">
+      <span>Navigate <b>↑ ↓ ← →</b></span>
+      <span>Select <b>OK / Enter</b></span>
+      <span>Back <b>Return / Esc</b></span>
+      <span id="inputMode">Keyboard ready</span>
+    </footer>
   </div>
 
   <script src="app.js"></script>
