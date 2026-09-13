@@ -2,7 +2,7 @@
   "use strict";
 
   var state = {
-    version: "0.0.4",
+    version: "0.0.5",
     startedAt: new Date().toISOString ? new Date().toISOString() : String(new Date()),
     device: {},
     features: {},
@@ -32,6 +32,7 @@
   var exitWindowUntil = 0;
   var VIDEO_URL_LOCAL = "media/kerotv-test.mp4";
   var VIDEO_URL_DIRECT = "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4";
+  var HLS_URL = "https://devimages.apple.com/iphone/samples/bipbop/bipbopall.m3u8";
 
   function on(el, eventName, handler) {
     if (!el) {
@@ -645,6 +646,7 @@
       makeRow("Browser H.264 claim", state.codecs.h264Mp4 || false, 'video.canPlayType("video/mp4; codecs=avc1…")') +
       '<button id="videoLocalBtn" class="action-button">1 · Test LAN H.264</button>' +
       '<button id="videoDirectBtn" class="action-button">2 · Test direct HTTPS</button>' +
+      '<button id="videoHlsBtn" class="action-button">3 · Test native HLS</button>' +
       '<div id="videoStatus" class="key-display">Not started</div>' +
       '<div class="video-wrap"><video id="probeVideo" preload="none"></video></div>' +
       '<p class="small">LAN test: PC downloads the MDN sample once and serves it over the same local HTTP server. Direct test uses the same file over HTTPS. If LAN passes and HTTPS fails, the decoder is fine and the limitation is network/TLS.</p>';
@@ -655,6 +657,7 @@
 
     var localButton = byId("videoLocalBtn");
     var directButton = byId("videoDirectBtn");
+    var hlsButton = byId("videoHlsBtn");
 
     if (localButton) {
       on(localButton, "click", function () {
@@ -668,6 +671,12 @@
     if (directButton) {
       on(directButton, "click", function () {
         startVideoTest(VIDEO_URL_DIRECT, "Direct HTTPS");
+      });
+    }
+
+    if (hlsButton) {
+      on(hlsButton, "click", function () {
+        startVideoTest(HLS_URL, "Native HLS");
       });
     }
   }
