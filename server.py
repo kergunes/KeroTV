@@ -88,7 +88,9 @@ class NoCacheHandler(http.server.SimpleHTTPRequestHandler):
         super().end_headers()
 
     def do_HEAD(self):
-        if self._is_font_request():
+        if self._is_cursor_request():
+            self._serve_cursor(False)
+        elif self._is_font_request():
             self._serve_font(False)
         elif self._is_media_request():
             self._serve_media(False)
@@ -98,7 +100,9 @@ class NoCacheHandler(http.server.SimpleHTTPRequestHandler):
             super().do_HEAD()
 
     def do_GET(self):
-        if self._is_font_request():
+        if self._is_cursor_request():
+            self._serve_cursor(True)
+        elif self._is_font_request():
             self._serve_font(True)
         elif self._is_media_request():
             self._serve_media(True)
@@ -106,6 +110,23 @@ class NoCacheHandler(http.server.SimpleHTTPRequestHandler):
             self._serve_subtitle(True)
         else:
             super().do_GET()
+
+    def _is_cursor_request(self):
+        return self.path.split("?", 1)[0] == "/assets/blank-cursor.gif"
+
+    def _serve_cursor(self, send_body):
+        # 1x1 transparent GIF89a. Old Opera/VEWD builds that ignore
+        # cursor:none may still honor a custom cursor URL.
+        payload = bytes.fromhex(
+            "47494638396101000100800000000000ffffff"
+            "21f90401000000002c00000000010001000002024401003b"
+        )
+        self.send_response(200)
+        self.send_header("Content-Type", "image/gif")
+        self.send_header("Content-Length", str(len(payload)))
+        self.end_headers()
+        if send_body:
+            self.wfile.write(payload)
 
     def _is_font_request(self):
         return self.path.split("?", 1)[0] == "/fonts/kerotv-arial.ttf"
