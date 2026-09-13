@@ -25,6 +25,11 @@ PORT = int(os.environ.get("KEROTV_PORT", "8000"))
 ROOT = os.path.dirname(os.path.abspath(__file__))
 MEDIA_DIR = os.path.join(ROOT, "media")
 SUBTITLE_DIR = os.path.join(ROOT, "subtitles")
+WINDOWS_DIR = os.environ.get("WINDIR", r"C:\Windows")
+SUBTITLE_FONT_FILE = os.environ.get(
+    "KEROTV_SUBTITLE_FONT",
+    os.path.join(WINDOWS_DIR, "Fonts", "arial.ttf")
+)
 MEDIA_FILE = os.path.join(MEDIA_DIR, "kerotv-test.mp4")
 MEDIA_URL = "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4"
 MEDIA_TYPES = {
@@ -83,7 +88,9 @@ class NoCacheHandler(http.server.SimpleHTTPRequestHandler):
         super().end_headers()
 
     def do_HEAD(self):
-        if self._is_media_request():
+        if self._is_font_request():
+            self._serve_font(False)
+        elif self._is_media_request():
             self._serve_media(False)
         elif self._is_subtitle_request():
             self._serve_subtitle(False)
@@ -91,12 +98,37 @@ class NoCacheHandler(http.server.SimpleHTTPRequestHandler):
             super().do_HEAD()
 
     def do_GET(self):
-        if self._is_media_request():
+        if self._is_font_request():
+            self._serve_font(True)
+        elif self._is_media_request():
             self._serve_media(True)
         elif self._is_subtitle_request():
             self._serve_subtitle(True)
         else:
             super().do_GET()
+
+    def _is_font_request(self):
+        return self.path.split("?", 1)[0] == "/fonts/kerotv-arial.ttf"
+
+    def _serve_font(self, send_body):
+        if not os.path.exists(SUBTITLE_FONT_FILE):
+            self.send_error(404, "KeroTV subtitle font not found on PC")
+            return
+
+        size = os.path.getsize(SUBTITLE_FONT_FILE)
+        self.send_response(200)
+        self.send_header("Content-Type", "font/ttf")
+        self.send_header("Content-Length", str(size))
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.end_headers()
+
+        if send_body:
+            with open(SUBTITLE_FONT_FILE, "rb") as source:
+                while True:
+                    chunk = source.read(64 * 1024)
+                    if not chunk:
+                        break
+                    self.wfile.write(chunk)
 
     def _media_path(self):
         request_path = self.path.split("?", 1)[0]
@@ -308,6 +340,10 @@ if __name__ == "__main__":
     print("Dead Cells H.264 control: {0}".format("READY" if os.path.exists(deadcells_h264) else "MISSING"))
     print("Age of Ultron H.264: {0}".format("READY" if os.path.exists(age_ultron_h264) else "MISSING"))
     print("Age of Ultron SRT: {0}".format("READY" if os.path.exists(age_ultron_srt) else "MISSING"))
+    print("Subtitle webfont: {0} ({1})".format(
+        "READY" if os.path.exists(SUBTITLE_FONT_FILE) else "MISSING",
+        SUBTITLE_FONT_FILE
+    ))
     print("")
     print("Keep this window open while testing on the TV.")
     print("Press Ctrl+C to stop.")
